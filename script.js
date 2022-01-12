@@ -107,4 +107,32 @@
 //   .attr("x", (d, i) => barWidth * i + barWidth * 0.5)
 //   .attr("fill", "yellow");
 
-// // lesson 5
+// // lesson 5 Making acxess
+
+let data = [80, 100, 56, 120, 180, 30, 40, 0, 150];
+let svgWidth = 600;
+let svgHeight = 400;
+
+let svg = d3.select("svg").attr("width", svgWidth).attr("height", svgHeight);
+
+let xScale = d3
+  .scaleLinear()
+  .domain([0, d3.max(data)])
+  .range([0, svgWidth]);
+
+let yScale = d3
+  .scaleLinear()
+  .domain([0, d3.max(data)])
+  .range([svgHeight, 0]);
+
+let x_axis = d3.axisBottom().scale(xScale);
+let y_axis = d3.axisLeft().scale(yScale);
+
+svg.append("g").attr("transform", "translate(50, -20)").call(y_axis);
+
+let x_axisTranslate = svgHeight - 20;
+
+svg
+  .append("g")
+  .attr("transform", `translate(50, ${x_axisTranslate})`)
+  .call(x_axis);
