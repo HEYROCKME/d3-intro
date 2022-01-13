@@ -172,3 +172,125 @@
 //   .attr("cy", 300)
 //   .attr("r", 80)
 //   .attr("fill", "palegreen");
+
+// // Dataset with objects
+
+// let data = [
+//   { platform: 'Android', percentage: 92.11 },
+//   { platform: 'Windows', percentage: 36.69 },
+//   { platform: 'iOS', percentage: 13.09 },
+// ]
+
+// // SVG setup
+// let svgWidth = 500,
+//   svgHeight = 300,
+//   radius = Math.min(svgWidth, svgHeight) / 2
+
+// let svg = d3.select('svg').attr('width', svgWidth).attr('height', svgHeight)
+
+// let g = svg.append('g').attr('transform', `translate(${radius}, ${radius})`)
+
+// let color = d3.scaleOrdinal(d3.schemeCategory10)
+
+// let pie = d3.pie().value((d) => d.percentage)
+
+// let path = d3.arc().outerRadius(radius).innerRadius(25)
+
+// let arc = g.selectAll('arc').data(pie(data)).enter().append('g')
+
+// arc
+//   .append('path')
+//   .attr('d', path)
+//   .attr('fill', (d) => {
+//     return color(d.data.percentage)
+//   })
+
+// let label = d3.arc().outerRadius(radius).innerRadius(0)
+
+// arc
+//   .append('text')
+//   .attr('transform', (d) => `translate(${label.centroid(d)})`)
+//   .attr('text-anchor', 'middle')
+//   .text(function (d) {
+//     return d.data.platform + ':' + d.data.percentage + '%'
+//   })
+
+//API URL
+const api =
+  'https://api.coindesk.com/v1/bpi/historical/close.json?start=2017-12-31&end=2018-04-01'
+
+/** Loading data from the API after the DOM Content has been Loaded */
+document.addEventListener('DOMContentLoaded', (e) => {
+  fetch(api)
+    .then((res) => res.json())
+    .then((data) => {
+      let parsedData = parseData(data)
+      drawChart(parsedData)
+    })
+    .catch((err) => console.log(err))
+})
+/** Parse date into key pairs */
+const parseData = (data) => {
+  let arr = []
+  for (let entry in data.bpi) {
+    arr.push({
+      date: new Date(entry),
+      value: data.bpi[entry],
+    })
+  }
+
+  return arr
+}
+
+/**
+ * Create a chart with D3
+ */
+
+const drawChart = (data) => {
+  let svgWidth = 600,
+    svgHeight = 400
+  let margin = { top: 20, right: 20, bottom: 30, left: 50 }
+  let width = svgWidth - margin.left - margin.right
+  let height = svgHeight - margin.top - margin.bottom
+
+  let svg = d3.select('svg').attr('width', svgWidth).attr('height', svgHeight)
+
+  let g = svg
+    .append('g')
+    .attr('transform', `translate(${margin.left}, ${margin.right})`)
+
+  let x = d3.scaleTime().rangeRound([0, width])
+  let y = d3.scaleTime().rangeRound([height, 0])
+
+  let line = d3
+    .line()
+    .x((d) => x(d.date))
+    .y((d) => y(d.value))
+  x.domain(d3.extent(data, (d) => d.date))
+  y.domain(d3.extent(data, (d) => d.value))
+
+  g.append('g')
+    .attr('transform', `translate(0, ${height})`)
+    .call(d3.axisBottom(x))
+    .select('.domain')
+    .remove()
+
+  g.append('g')
+    .call(d3.axisLeft(y))
+    .append('text')
+    .attr('fill', 'black')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 6)
+    .attr('dy', '0.71em')
+    .attr('text-anchor', 'end')
+    .text('Price ($)')
+
+  g.append('path')
+    .datum(data)
+    .attr('fill', 'none')
+    .attr('stroke', 'salmon')
+    .attr('stroke-linejoin', 'round')
+    .attr('stroke-linecap', 'round')
+    .attr('stroke-width', 5)
+    .attr('d', line)
+}
